@@ -46,7 +46,10 @@ int get_number(char* parameter_name) {
 	/* buf = "<symbols>\n\0" */
 	fgets(buf, BUFFSIZE, stdin);
 	check_result = check_input(buf);
-
+	/* 
+	check_result side effect - removing '\n'(if buf is not just '\n'): 
+	buf = "<symbols>\0" 
+	*/
 	while (check_result != SUCCESS) {
 		printf("Incorrect input! ");
 
