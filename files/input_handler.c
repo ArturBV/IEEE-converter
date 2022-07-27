@@ -1,65 +1,72 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 enum {
-	BUFFSIZE = 31
+	LOWER_LIMIT = 0,
+	UPPER_LIMIT = 61,
+	BUFFSIZE = 300
+};
+
+enum ERRORS {
+	SUCCESS,
+	ERR_EMPTY,
+	ERR_OUT_OF_BOUND,
+	ERR_NDIGIT
 };
 
 int is_digit(char symbol) {
 	return symbol >= '0' && symbol <= '9';
 }
 
-int get_number(char* parameter_name) {
-	char c;
-	char buf[BUFFSIZE];
-	int i = 0;
-	int found_trouble = 0;
-/*FIXMEEEE*/
-	while (found_trouble) {
-		found_trouble = 0;
-		/* empty string case */
-		if ((c = getchar()) == '\n') {
-			printf("Incorrect input! Please, enter a number\n");
-			printf("bits for %s: ", parameter_name);
-			continue;
-		} else {
-			buf[i++] = c;
-		}
-
-		while ((c = getchar()) != '\n' && c != EOF) {
-			if (!is_digit(c)) {
-				/* input error */
-				/* skip wrong input */
-				while ((c = getchar()) != '\n' && c != EOF) {}
-				printf("Incorrect input! Please, enter a number\n");
-				printf("bits for %s: ", parameter_name);
-				/* reset buf index */
-				i = 0;
-				found_trouble = 1;
-			} else {
-				buf[i++] = c;
-			}
-		}
-
-		found_trouble = 1;
+int check_input(char buf[]) {
+	if (buf[0] == '\n') {
+		return ERR_EMPTY;
 	}
 
-	// while ((c = getchar()) != '\n' && c != EOF) {
-	// 	if (!is_digit(c)) {
-	// 		/* input error */
-	// 		/* skip wrong input */
-	// 		while ((c = getchar()) != '\n' && c != EOF) {}
-	// 		printf("Incorrect input! Please, enter a number\n");
-	// 		printf("bits for %s: ", parameter_name);
-	// 		/* reset buf index */
-	// 		i = 0;
-	// 		continue;
-	// 	}
-	// 	buf[i++] = c;
-	// }
-
+	int i;
+	for (i = 0; buf[i] != '\n'; i++) {
+		if (!is_digit(buf[i])) {
+			return ERR_NDIGIT;
+		}
+	}
 	buf[i] = '\0';
-	printf("%s\n", buf);
+
+	if (atoi(buf) >= UPPER_LIMIT || atoi(buf) <= LOWER_LIMIT) {
+		return ERR_OUT_OF_BOUND;
+	} 
+
+	return SUCCESS;
+}
+
+int get_number(char* parameter_name) {
+	char buf[BUFFSIZE];	
+	int check_result;
+
+	/* buf = "<symbols>\n\0" */
+	fgets(buf, BUFFSIZE, stdin);
+	check_result = check_input(buf);
+
+	while (check_result != SUCCESS) {
+		printf("Incorrect input! ");
+
+		switch (check_result) {
+			case ERR_EMPTY:
+			case ERR_NDIGIT:
+				printf("Please, enter a number\n");
+				break;
+			case ERR_OUT_OF_BOUND:
+				printf("Your number is out of limit(%d, %d)\n", LOWER_LIMIT + 1, UPPER_LIMIT - 1);
+				break;
+			default:
+				printf("You mustn't see this message\n");
+		}
+		
+		printf("bits for %s: ", parameter_name);
+		fgets(buf, BUFFSIZE, stdin);
+		check_result = check_input(buf);
+	}
+	
 	return atoi(buf);
 }
 
