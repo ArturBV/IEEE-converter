@@ -13,7 +13,8 @@ main.o:# main.c
 input_handler.o:# input_handler.c
 	@gcc $(FLAGS) -c $(FILES_PATH)/input_handler.c -o input_handler.o
 
-run: clean IEEE-calculator
+run: 
+	@rm -f $(ALL_OBJ_FILES)
 	@./IEEE-calculator
 
 clean:
