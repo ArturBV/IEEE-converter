@@ -36,7 +36,7 @@ int read_input(char* parameter_name) {
 	fgets(buf, BUFFSIZE, stdin);
 	check_result = check_parameter(buf);
 	/* 
-	`check_result` side effect - removing '\n'(if `buf` is not just '\n'): 
+	`check_parameter(buf)` side effect - removing '\n'(if `buf` is not just '\n'): 
 	buf = "<symbols>\0" 
 	*/
 	while (check_result != SUCCESS) {
