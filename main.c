@@ -7,11 +7,11 @@
 #include "files/parameter_handler.h"
 #include "files/input_handler.h"
 
-#define ROUND_BITS 3
-
 enum {
 	NORMAL,
-	DENORMAL
+	DENORMAL,
+	ROUND_BITS = 3,
+	BITS_IN_INT = 8 * sizeof(int)
 };
 
 typedef struct Fraction {
@@ -35,6 +35,18 @@ void add_bit(char* number, int index) {
 	return;
 }
 
+char* strreverse(char* str, int len) {
+	char tmp;
+
+	for (int i = 0; i < len / 2; i++) {
+		tmp = str[i];
+		str[i] = str[len - i - 1];
+		str[len - i - 1] = tmp;
+	}
+
+	return str;
+} 
+
 /* НЕ НАДО ФИКСИТЬ */
 /* FIXME */
 /*
@@ -46,58 +58,86 @@ void add_bit(char* number, int index) {
 /* denominator > 1 */
 /* number must be betwen 0 and 1 */
 char* binary_notion(Fraction* number, int precision) {
-	int compare_result;
+	int i;
+	int higher_bit_index;
+	int compare_result, need_round = 1;
+	int tmp_value, tmp_bin_len, is_integer;
 	char *binary_str = (char*) calloc(precision + ROUND_BITS + 1, sizeof(char));
 	char *round_bits = (char*) calloc(ROUND_BITS + 1, sizeof(char));
-	
-	for (int i = 0; i < precision + ROUND_BITS; i++) {
+
+	if (number->denominator != 1) {
+		tmp_value = number->denominator;
+		is_integer = 0;
+	} else {
+		tmp_value = number->numerator;
+		is_integer = 1;
+
+		/* get higher bit of tmp_value (indexation from left) */
+		/* why not take a solution from Hacker's Delight? */
+		/* nah, too easy */
+		for (i = 0; !((tmp_value >> (BITS_IN_INT - i - 1)) & 1) &&
+				i < BITS_IN_INT; i++) {}
+		
+		higher_bit_index = i;
+		tmp_bin_len = BITS_IN_INT - higher_bit_index;
+
+		if (tmp_bin_len <= precision) {
+			for (i = 0; i < precision - tmp_bin_len; i++) {
+				binary_str[i] = '0';
+			}
+			for (i = 0 ; i < tmp_bin_len; i++) {
+				binary_str[precision - i - 1] = '0' + tmp_value % 2;
+				tmp_value /= 2;
+			}
+			need_round = 0;
+		}
+	}
+	printf("higher_bit_index:%d (tmp_value now:%d)\n", higher_bit_index, tmp_value);
+	for (i = 0; i < precision + ROUND_BITS; i++) {
 		number->denominator /= 2;
 
 		/* end of converting */
-		if (number->denominator == 1) {
-			binary_str[i] = '1';
-			if (i >= precision) {
-				round_bits[i - precision] = binary_str[i];
-			}
-			i++;
+		if ((i + 1 > tmp_bin_len && is_integer) || (number->denominator == 1 && !is_integer)) {
 			while (i < precision + ROUND_BITS) {
-				binary_str[i] = '0';
-				if (i >= precision) {
-					round_bits[i - precision] = binary_str[i];
-				}
-				i++;
+				binary_str[i++] = '0';
 			}
 			break;
 		}
 
-		if (number->numerator / number->denominator) {
-			binary_str[i] = '1';
+		/* main operation */
+		if (!is_integer) {
+			binary_str[i] = '0' + number->numerator / number->denominator;
+			number->numerator %= number->denominator;
+		} else if (tmp_bin_len > precision) {
+			binary_str[i] = '0' + ((tmp_value >> (tmp_bin_len - i - 1)) & 1);		
 		} else {
-			binary_str[i] = '0';
-		}
-		number->numerator %= number->denominator;
-
-		if (i >= precision) {
-			round_bits[i - precision] = binary_str[i];
+			/* binary_str is done before loop */
+			break;
 		}
 	}
-	binary_str[precision + ROUND_BITS] = '\0';
-	round_bits[ROUND_BITS] = '\0';
+	printf("binary_str:%s\n", binary_str);
 
-	compare_result = strcmp(round_bits, "100");
-	if (compare_result == 0) {
-		/* even-round */
-		if (binary_str[precision - 1] == '1') {
+	if (need_round) {
+		binary_str[precision + ROUND_BITS] = '\0';
+		strncpy(round_bits, (binary_str + precision), ROUND_BITS);
+		round_bits[ROUND_BITS] = '\0';
+
+		compare_result = strcmp(round_bits, "100");
+		if (compare_result == 0) {
+			/* even-round */
+			if (binary_str[precision - 1] == '1') {
+				add_bit(binary_str, precision - 1);
+			}
+		} else if (compare_result > 0) {
 			add_bit(binary_str, precision - 1);
-		}
-	} else if (compare_result > 0) {
-		add_bit(binary_str, precision - 1);
+		}		
 	}
 
 	free(round_bits);
 	binary_str[precision] = '\0';
 	return binary_str;
 }
+
 
 int cmp_fraction(Fraction* n1, Fraction* n2) {
 	long long tmp_1 = abs(n1->numerator) * n2->denominator; 
@@ -137,7 +177,7 @@ int main(void) {
 	int number_type;
 	int frac_step = 1 << frac_n;
 	Fraction max_denormal = {.numerator = 1,
-							 .denominator = 1 << (exp_shift - 1)};
+			.denominator = 1 << (exp_shift - 1)};
 
 	if (cmp_fraction(num, &max_denormal) <= 0) {
 		number_type = DENORMAL;
@@ -147,9 +187,8 @@ int main(void) {
 
 	printf("exp_n:%d, frac_n:%d\n", exp_n, frac_n);
 	printf("%d %d, %d %d max:%d\n",num->numerator, num->denominator,
-									max_denormal.denominator, frac_step,
-									max_denormal.denominator * frac_step);
-
+			max_denormal.denominator, frac_step,
+			max_denormal.denominator * frac_step);
 	/* IEEE notation:   (-1)^s * m * 2^e */
 	/* binary notation:	|s||  exp_b  ||  frac  | */
 	char s, *exp_str, *frac_str;
@@ -187,7 +226,6 @@ int main(void) {
 	exp_str[exp_n] = '\0';
 
 
-
 	/* not a frac case */
 	if (num->denominator == 1) {
 		
@@ -213,6 +251,7 @@ int main(void) {
 	printf("exp_shift:%lld\n", exp_shift);
 	// printf("%d %d\n", exp_n, frac_n);
 	printf("%d / %d\n", num->numerator, num->denominator);
+
 	free(exp_str);
 	free(frac_str);
 	free(num);
