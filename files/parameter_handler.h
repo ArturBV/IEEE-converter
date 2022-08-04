@@ -1,17 +1,14 @@
 enum CONSTANTS{
 	LOWER_LIMIT = 0,
-	UPPER_LIMIT = 61,
+	UPPER_LIMIT = 31,
 	BUFFSIZE = 300
 };
 
 enum RESULTS {
-	SUCCESS,			/* 0 */
-	ERR_EMPTY,			/* 1 */
+	SUCCESS,	/* 0 */
+	ERR_EMPTY,	/* 1 */
 	ERR_OUT_OF_BOUND,	/* 2 */
-	ERR_NDIGIT,			/* 3 */
-	/* used in "input_handler.c" */
-	IS_FRAC,			/* 4 */
-	IS_NUMBER			/* 5 */
+	ERR_NDIGIT,	/* 3 */
 };
 
 int is_digit(char symbol);

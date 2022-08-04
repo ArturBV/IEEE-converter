@@ -58,7 +58,6 @@ void get_number(int* numerator, int* denominator) {
 	
 	fgets(buf, BUFFSIZE, stdin);
 	check_result = check_number(buf);
-	// while (check_result != IS_FRAC && check_result != IS_NUMBER) {
 	while (check_result != SUCCESS) {
 		switch (check_result) {
 			case ERR_EMPTY:
