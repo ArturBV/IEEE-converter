@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "input_handler.h"
 #include "parameter_handler.h"
 
 
@@ -38,10 +40,6 @@ int check_number(char buf[]) {
 			return ERR_NDIGIT;
 		}
 	}
-	/*
-	if (slash_index == -1) {
-		return SUCCESS;
-	}*/
 
 	return SUCCESS;
 }

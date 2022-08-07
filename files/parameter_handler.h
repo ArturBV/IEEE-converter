@@ -11,7 +11,7 @@ enum RESULTS {
 	ERR_NDIGIT,	/* 3 */
 };
 
-int is_digit(char symbol);
-int check_parameter(char buf[]);
-int read_input(char* parameter_name);
-void get_params(int *exp_n, int *frac_n);
+int is_digit(char);
+int check_parameter(char *);
+int read_input(char *);
+void get_params(int *, int *);

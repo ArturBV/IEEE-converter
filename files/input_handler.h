@@ -1,2 +1,2 @@
-int check_number(char buf[]);
-void get_number(int* numerator, int* denominator);
+int check_number(char *);
+void get_number(int *, int *);

@@ -9,11 +9,12 @@ int is_digit(char symbol) {
 }
 
 int check_parameter(char buf[]) {
+	int i;
+
 	if (buf[0] == '\n') {
 		return ERR_EMPTY;
 	}
 
-	int i;
 	for (i = 0; buf[i] != '\n'; i++) {
 		if (!is_digit(buf[i])) {
 			return ERR_NDIGIT;
