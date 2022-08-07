@@ -1,3 +1,2 @@
 # IEEE-converter
-Launch:
-```$make run```
+Launch:`make run`
