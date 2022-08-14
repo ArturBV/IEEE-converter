@@ -1,2 +1,5 @@
-# IEEE-converter
-Launch:`make run`
+# IEEE-converter  
+This programm computes a binary representation of input number according to IEEE-754 standart.  
+You can сhoose the number of bits for storage a mantissa(frac) and exponent(exp).
+## Build and run
+In terminal:`make run`
