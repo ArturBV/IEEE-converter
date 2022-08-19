@@ -64,7 +64,7 @@ int read_input(char* parameter_name) {
 }
 
 void get_params(int *exp_n, int *frac_n) {
-	printf("IEEE(?-754?)\t[CTRL+C for exit]\n");
+	printf("IEEE-754\t[CTRL+C for exit]\n");
 	printf("Set the length of parameters:\n");
 
 	printf("bits for exp: ");
