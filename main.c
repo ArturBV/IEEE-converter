@@ -162,12 +162,17 @@ void reduce_frac(Fraction* number) {
 	number->denominator /= gcd_num;
 }
 
+Fraction* create_fraction(int numerator, int denominator) {
+	Fraction* new = (Fraction*) calloc(1, sizeof(Fraction));
+	new->numerator = numerator;
+	new->denominator = denominator;
+	return new;
+}
+
 int main(void) {
 	char s;
 	int exp_n, frac_n;
-	Fraction* num = (Fraction*) calloc(1, sizeof(Fraction));
-	num->numerator = 0;
-	num->denominator = 1;
+	Fraction* num = create_fraction(0, 1);
 
 	/* parameter_handler */
 	get_params(&exp_n, &frac_n);
@@ -178,6 +183,7 @@ int main(void) {
 		printf("Error! Division by zero!\n");
 		return 1;
 	}
+
 	/* IEEE notation:   (-1)^s * m * 2^e */
 	/* binary notation:	|s||  exp_str  ||  frac_str  | */
 	/* s */
@@ -194,28 +200,19 @@ int main(void) {
 
 	int number_type;
 	int frac_step = 1 << frac_n;
-	Fraction min_denormal = {
-		.numerator = 1,
-		.denominator = (1 << (exp_shift - 1)) * frac_step
-	};
-	Fraction max_denormal = {
-		.numerator = frac_step - 1,
-		.denominator = min_denormal.denominator
-	};
+	Fraction* min_denormal = create_fraction(1, (1 << (exp_shift - 1)) * frac_step);
+	Fraction* max_denormal = create_fraction(frac_step - 1, min_denormal->denominator);
 
-	if (cmp_abs_fraction(num, &max_denormal) <= 0) {
+	if (cmp_abs_fraction(num, max_denormal) <= 0) {
 		number_type = DENORMAL;
 	} else {
 		number_type = NORMAL;
 	}
 
-	char *exp_str, *frac_str, *full_str;
+	char *exp_str, *frac_str, *full_frac_str;
 	int exp_i;
 	int e_power = 0;
-	Fraction exp_f = {
-		.numerator = 0,
-		.denominator = 1
-	};
+	Fraction* exp_f = create_fraction(0, 1);
 
 	/* exp_i */
 	if (number_type == NORMAL) {
@@ -239,17 +236,17 @@ int main(void) {
 	} else { /* DENORMAL case */
 		/* num <= max_denormal */
 		e_power = 0 - exp_shift; /* 1 - exp_shift */
-		num->numerator *= max_denormal.denominator / frac_step;
+		num->numerator *= max_denormal->denominator / frac_step;
 		reduce_frac(num);
 	}
 
 	exp_i = exp_shift + e_power;
-	exp_f.numerator = exp_i;
-	exp_str = binary_notion(&exp_f, exp_n);
+	exp_f->numerator = exp_i;
+	exp_str = binary_notion(exp_f, exp_n);
 
 	/* frac */
 	frac_str = binary_notion(num, frac_n);
-	full_str = binary_notion(num, frac_n + ROUND_BITS * 2);
+	full_frac_str = binary_notion(num, frac_n + ROUND_BITS * 2);
 
 	printf("Result: %c %s %s\n\n", s, exp_str, frac_str);
 
@@ -262,11 +259,15 @@ int main(void) {
 	printf("exp_i:%d (converts into binary)\n", exp_i);
 	printf("exp_shift:%d\n", exp_shift);
 	printf("e_power:%d\n", e_power);
-	printf("frac before round:%s\n", full_str);
+	printf("frac before round:%s\n", full_frac_str);
 
-	free(full_str);
+	free(full_frac_str);
 	free(exp_str);
 	free(frac_str);
+	
 	free(num);
+	free(min_denormal);
+	free(max_denormal);
+	free(exp_f);
 	return 0;
 }
